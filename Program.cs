@@ -38,7 +38,8 @@ else { Console.WriteLine("Invalid command, must be \"build\" or \"analyze\""); }
 
 void BuildIban(int bankCode, int accountNumber)
 {
-    Console.WriteLine($"NO00{bankCode}{accountNumber}7");
+    long checksum = CalculateChecksum(bankCode, accountNumber);
+    Console.WriteLine($"NO{checksum}{bankCode}{accountNumber}7");
 }
 
 void AnalyzeIban(string Iban)
@@ -95,4 +96,10 @@ bool CheckAnalyzeCountryCode(string Iban)
     return true;
 }
 
-
+long CalculateChecksum(int bankCode, int accountNumber)
+{
+    const long N = 23, O = 24;
+    string dividendString = $"{bankCode}{accountNumber.ToString()}7{N}{O}00";
+    long result = long.Parse(dividendString) % 97;
+    return 98 - result;
+}
