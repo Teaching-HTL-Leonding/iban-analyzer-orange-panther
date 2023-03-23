@@ -1,34 +1,54 @@
-﻿if(!CheckNumberOfArguments()) { return; }
-if (!CheckArgumentLength(args[0], args[1])) { return; }
-if (!CheckIfArgumentsContainLetters(args[0], args[1], out string wrongArgument))
+﻿if (args.Length < 2 && args.Length < 3)
 {
-    Console.WriteLine($"{wrongArgument} must not contain letters.");
+    Console.WriteLine("Too few arguments.");
+    return;
+}
+if (args.Length > 2 && args.Length > 3)
+{
+    Console.WriteLine("Too many arguments.");
     return;
 }
 
-BuildIban(int.Parse(args[0]), int.Parse(args[1]));
+if (args[0] == "build")
+{
+    if (!CheckBuildArgumentLength(args[1], args[2])) { return; }
+    if (!CheckIfBuildArgumentsContainLetters(args[1], args[2], out string wrongArgument))
+    {
+        Console.WriteLine($"{wrongArgument} must not contain letters.");
+        return;
+    }
+    BuildIban(int.Parse(args[1]), int.Parse(args[2]));
+}
+else if (args[0] == "analyze")
+{
+    if (args[1].Length != 15)
+    {
+        Console.WriteLine("Wrong length of IBAN");
+        return;
+    }
+    if (!CheckAnalyzeCountryCode(args[1])) { return; }
+    if (!int.TryParse(args[1].Substring(args[1].Length - 1), out int result) || result != 7)
+    {
+        Console.WriteLine("Wrong national check digit, we currently only support \"7\"");
+        return;
+    }
+    AnalyzeIban(args[1]);
+}
+else { Console.WriteLine("Invalid command, must be \"build\" or \"analyze\""); }
 
 void BuildIban(int bankCode, int accountNumber)
 {
     Console.WriteLine($"NO00{bankCode}{accountNumber}7");
 }
 
-bool CheckNumberOfArguments()
+void AnalyzeIban(string Iban)
 {
-    if (args.Length < 2)
-    {
-        Console.WriteLine("Too few arguments.");
-        return false;
-    }
-    if (args.Length > 2)
-    {
-        Console.WriteLine("Too many arguments.");
-        return false;
-    }
-    return true;
+    int bankCode = int.Parse(Iban.Substring(4, 4));
+    int accountNumber = int.Parse(Iban.Substring(8, 6));
+    Console.WriteLine($"Bank code is {bankCode}\nAccount number is {accountNumber}");
 }
 
-bool CheckArgumentLength(string arg1, string arg2)
+bool CheckBuildArgumentLength(string arg1, string arg2)
 {
     if (arg1.Length != 4)
     {
@@ -43,7 +63,7 @@ bool CheckArgumentLength(string arg1, string arg2)
     return true;
 }
 
-bool CheckIfArgumentsContainLetters(string arg1, string arg2, out string wrongString)
+bool CheckIfBuildArgumentsContainLetters(string arg1, string arg2, out string wrongString)
 {
     for (int i = 0; i < arg1.Length; i++)
     {
@@ -64,3 +84,15 @@ bool CheckIfArgumentsContainLetters(string arg1, string arg2, out string wrongSt
     wrongString = "";
     return true;
 }
+
+bool CheckAnalyzeCountryCode(string Iban)
+{
+    if (Iban.Substring(0, 2) != "NO")
+    {
+        Console.WriteLine("Wrong country code, we currently only support \"NO\"");
+        return false;
+    }
+    return true;
+}
+
+
